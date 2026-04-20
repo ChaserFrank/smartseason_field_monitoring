@@ -4,10 +4,16 @@ from django.db import migrations
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth.hashers import make_password
+import sys
 
 
 def seed_initial_data(apps, schema_editor):
     """Create initial admin user, field agent, and sample fields"""
+
+    # Skip seeding during tests
+    if 'test' in sys.argv or 'test' in schema_editor.connection.alias:
+        print("⚠️ Test environment detected, skipping seed data")
+        return
 
     # Get the historical versions of models
     User = apps.get_model('accounts', 'User')
@@ -22,7 +28,7 @@ def seed_initial_data(apps, schema_editor):
         User.objects.create(
             username=admin_username,
             email=admin_email,
-            password=make_password(admin_password),  # Use make_password instead
+            password=make_password(admin_password),
             role='ADMIN',
             is_superuser=True,
             is_staff=True,
@@ -41,7 +47,7 @@ def seed_initial_data(apps, schema_editor):
         username=agent_username,
         defaults={
             'email': agent_email,
-            'password': make_password(agent_password),  # Use make_password
+            'password': make_password(agent_password),
             'role': 'FIELD_AGENT',
             'is_active': True,
         }
@@ -51,12 +57,11 @@ def seed_initial_data(apps, schema_editor):
         print(f"✅ Created field agent: {agent_username}")
     else:
         print(f"⚠️ Field agent '{agent_username}' already exists")
-        # Ensure agent has correct role
         if agent.role != 'FIELD_AGENT':
             agent.role = 'FIELD_AGENT'
             agent.save()
 
-    # Create sample fields only if agent exists
+    # Create sample fields
     if agent:
         today = timezone.now().date()
         sample_fields = [
@@ -107,13 +112,11 @@ def remove_seed_data(apps, schema_editor):
     User = apps.get_model('accounts', 'User')
     Field = apps.get_model('fields', 'Field')
 
-    # Delete fields first (due to foreign key)
     Field.objects.filter(name__icontains='North Field').delete()
     Field.objects.filter(name__icontains='South Field').delete()
     Field.objects.filter(name__icontains='East Field').delete()
     Field.objects.filter(name__icontains='West Field').delete()
 
-    # Delete users
     User.objects.filter(username='fieldagent').delete()
     User.objects.filter(username='admin').delete()
 
