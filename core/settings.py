@@ -13,7 +13,14 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 # Allow Render's default domain and any custom domains
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,.onrender.com').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,.onrender.com,smartseason-field-monitoring-02sy.onrender.com').split(',')
+
+# Ensure we always allow the Render domain
+if 'RENDER_EXTERNAL_HOSTNAME' in os.environ:
+    ALLOWED_HOSTS.append(os.environ['RENDER_EXTERNAL_HOSTNAME'])
+
+# Debug: Print ALLOWED_HOSTS on startup
+print(f"ALLOWED_HOSTS = {ALLOWED_HOSTS}")
 
 INSTALLED_APPS = [
     'django.contrib.admin',
