@@ -8,7 +8,7 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY: Don't run with debug turned on in production!
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-smartseason-dev-key-change-in-production')
+SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 # Allow Render's default domain and any custom domains
