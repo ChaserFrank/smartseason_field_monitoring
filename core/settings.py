@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import sys
 import dj_database_url
 from dotenv import load_dotenv
 
@@ -129,11 +130,20 @@ if not DEBUG:
     }
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# SSL Settings - only in production
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    SECURE_SSL_REDIRECT = True
+
+    # Don't force SSL redirect during tests
+    if 'test' not in sys.argv:
+        SECURE_SSL_REDIRECT = True
+
+    # Also add these for better security
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
 AUTH_USER_MODEL = 'accounts.User'
 

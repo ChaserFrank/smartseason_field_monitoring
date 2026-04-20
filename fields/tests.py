@@ -3,6 +3,7 @@
 from django.test import TestCase, Client
 from django.utils import timezone
 from datetime import timedelta
+from django.urls import reverse  # Add this import
 from accounts.models import User
 from fields.models import Field, FieldUpdate
 from fields.services import create_field_update, get_admin_summary, get_agent_summary
@@ -122,32 +123,38 @@ class PermissionsTest(TestCase):
         self.client = Client()
 
     def test_unauthenticated_redirected_to_login(self):
-        response = self.client.get('/fields/')
-        self.assertRedirects(response, '/accounts/login/?next=/fields/')
+        url = reverse('fields:list')
+        response = self.client.get(url)
+        self.assertRedirects(response, f'/accounts/login/?next={url}')
 
     def test_admin_can_access_field_list(self):
         self.client.login(username='admin', password='admin1234')
-        response = self.client.get('/fields/')
+        url = reverse('fields:list')
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
     def test_agent_can_access_field_list(self):
         self.client.login(username='agent', password='agent1234')
-        response = self.client.get('/fields/')
+        url = reverse('fields:list')
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
     def test_agent_cannot_access_other_agents_field(self):
         self.client.login(username='other', password='other1234')
-        response = self.client.get(f'/fields/{self.field.pk}/')
+        url = reverse('fields:detail', kwargs={'pk': self.field.pk})
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
     def test_agent_cannot_create_field(self):
         self.client.login(username='agent', password='agent1234')
-        response = self.client.get('/fields/create/')
+        url = reverse('fields:create')
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 302)  # redirected away
 
     def test_admin_can_create_field(self):
         self.client.login(username='admin', password='admin1234')
-        response = self.client.get('/fields/create/')
+        url = reverse('fields:create')
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
 
@@ -184,4 +191,5 @@ class SummaryServiceTest(TestCase):
 
     def test_agent_summary_only_sees_own_fields(self):
         summary = get_agent_summary(self.agent)
-        self.assertEqual(summary['total'], 2)
+        self.assertEqual(summary['total'], 2)\
+
