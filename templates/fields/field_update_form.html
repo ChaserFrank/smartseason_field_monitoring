@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Update {{ field.name }}{% endblock %}
+{% block page_title %}Log Field Update{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{% url 'fields:detail' field.pk %}" class="btn btn-outline btn-sm">← Back to Field</a>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:600px;" class="fade-in fade-in-1">
+
+  <!-- Field summary -->
+  <div class="card mb-6">
+    <div class="card-body" style="padding:16px 20px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+        <div>
+          <div style="font-family:var(--font-display); font-weight:700; font-size:17px;">{{ field.name }}</div>
+          <div style="color:var(--text-muted); font-size:13px;">🌱 {{ field.crop_type }} &nbsp;·&nbsp; {{ field.days_since_planted }} days in ground</div>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <span style="font-size:12px; color:var(--text-muted); font-family:var(--font-mono);">Current:</span>
+          <span class="stage-badge stage-{{ field.current_stage|lower }}">{{ field.get_current_stage_display }}</span>
+          <span class="badge {{ field.status_badge_class }}">{{ field.computed_status|title }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Update form -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">📝 Log an Update</div>
+    </div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-error">{{ form.non_field_errors|join:", " }}</div>
+        {% endif %}
+
+        <div class="form-group">
+          <label class="form-label">{{ form.new_stage.label }}</label>
+          {{ form.new_stage }}
+          {% if form.new_stage.errors %}<div class="invalid-feedback">{{ form.new_stage.errors|join:", " }}</div>{% endif %}
+          <div class="form-hint">Select the current stage of this field. Updates are tracked in the history.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ form.notes.label }}</label>
+          {{ form.notes }}
+          {% if form.notes.errors %}<div class="invalid-feedback">{{ form.notes.errors|join:", " }}</div>{% endif %}
+          <div class="form-hint">Describe soil conditions, pest activity, irrigation status, or any concerns.</div>
+        </div>
+
+        <div style="display:flex; gap:10px; justify-content:flex-end; padding-top:16px; border-top:1px solid var(--border);">
+          <a href="{% url 'fields:detail' field.pk %}" class="btn btn-outline">Cancel</a>
+          <button type="submit" class="btn btn-primary">Save Update</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

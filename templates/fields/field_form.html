@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{% url 'fields:list' %}" class="btn btn-outline btn-sm">← Cancel</a>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:680px;" class="fade-in fade-in-1">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">{{ title }}</div>
+    </div>
+    <div class="card-body">
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-error">{{ form.non_field_errors|join:", " }}</div>
+        {% endif %}
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="form-group" style="grid-column:1/-1;">
+            <label class="form-label">Field Name *</label>
+            {{ form.name }}
+            {% if form.name.errors %}<div class="invalid-feedback">{{ form.name.errors|join:", " }}</div>{% endif %}
+            <div class="form-hint">A descriptive name to identify this field or plot.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Crop Type *</label>
+            {{ form.crop_type }}
+            {% if form.crop_type.errors %}<div class="invalid-feedback">{{ form.crop_type.errors|join:", " }}</div>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Planting Date *</label>
+            {{ form.planting_date }}
+            {% if form.planting_date.errors %}<div class="invalid-feedback">{{ form.planting_date.errors|join:", " }}</div>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Current Stage</label>
+            {{ form.current_stage }}
+            {% if form.current_stage.errors %}<div class="invalid-feedback">{{ form.current_stage.errors|join:", " }}</div>{% endif %}
+            <div class="form-hint">Start with PLANTED when seeding a new field.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Assign to Agent</label>
+            {{ form.assigned_agent }}
+            {% if form.assigned_agent.errors %}<div class="invalid-feedback">{{ form.assigned_agent.errors|join:", " }}</div>{% endif %}
+            <div class="form-hint">Leave blank to keep unassigned for now.</div>
+          </div>
+        </div>
+
+        <!-- Status explanation panel -->
+        <div style="background:var(--green-50); border:1px solid var(--green-300); border-radius:var(--radius-md); padding:16px; margin:8px 0 20px; font-size:13px;">
+          <div style="font-weight:700; color:var(--green-700); margin-bottom:8px; font-family:var(--font-display);">ℹ️ About Computed Status</div>
+          <div style="color:var(--green-800); line-height:1.7;">
+            Field status is <strong>automatically computed</strong> — you don't set it manually.
+            <ul style="margin-top:6px; padding-left:18px;">
+              <li><strong>Completed</strong>: Stage reaches HARVESTED</li>
+              <li><strong>At Risk</strong>: Planted 90+ days but still PLANTED/GROWING, or no updates in 14+ days</li>
+              <li><strong>Active</strong>: Everything else</li>
+            </ul>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px; justify-content:flex-end; padding-top:8px; border-top:1px solid var(--border); margin-top:4px;">
+          <a href="{% url 'fields:list' %}" class="btn btn-outline">Cancel</a>
+          <button type="submit" class="btn btn-primary">{{ action }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

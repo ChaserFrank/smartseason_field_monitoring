@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}SmartSeason{% endblock %} | Field Monitoring System</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/smartseason.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+{% if user.is_authenticated %}
+<div class="app-shell">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🌱</div>
+      <div>
+        <div class="brand-text">SmartSeason</div>
+        <div class="brand-sub">Field Monitor</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Navigation</div>
+      <a href="{% url 'dashboard:home' %}" class="nav-link {% if request.resolver_match.app_name == 'dashboard' %}active{% endif %}">
+        <span class="nav-icon">📊</span> Dashboard
+      </a>
+      <a href="{% url 'fields:list' %}" class="nav-link {% if request.resolver_match.app_name == 'fields' %}active{% endif %}">
+        <span class="nav-icon">🌾</span> Fields
+      </a>
+      {% if user.is_admin_role %}
+      <a href="{% url 'fields:create' %}" class="nav-link">
+        <span class="nav-icon">➕</span> Add Field
+      </a>
+      {% endif %}
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="user-avatar">{{ user.first_name|first|default:user.username|first|upper }}</div>
+        <div class="user-info">
+          <div class="user-name">{{ user.get_full_name|default:user.username }}</div>
+          <div class="user-role">{{ user.display_role }}</div>
+        </div>
+      </div>
+      <form method="post" action="{% url 'accounts:logout' %}" style="margin-top:8px">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline w-full" style="justify-content:center; font-size:12px">
+          Sign Out
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-title">{% block page_title %}{% endblock %}</div>
+      <div class="topbar-actions">
+        {% block topbar_actions %}{% endblock %}
+      </div>
+    </header>
+
+    <main class="page-content">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags|default:'success' }}">
+            <span>{% if message.tags == 'success' %}✅{% elif message.tags == 'error' %}❌{% else %}⚠️{% endif %}</span>
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+{% else %}
+  {% block auth_content %}{% endblock %}
+{% endif %}
+
+<script>
+document.querySelectorAll('.alert').forEach(el => {
+  setTimeout(() => { el.style.transition = 'opacity .4s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 400); }, 5000);
+});
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

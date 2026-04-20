@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{% url 'fields:create' %}" class="btn btn-primary btn-sm">Add New Field</a>
+{% endblock %}
+
+{% block content %}
+<!-- Stat Cards -->
+<div class="stat-grid fade-in fade-in-1">
+  <div class="stat-card blue">
+    <div class="stat-label">Total Fields</div>
+    <div class="stat-value">{{ total }}</div>
+    <div class="stat-sub">across all agents</div>
+    <div class="stat-icon">🌾</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-label">Active</div>
+    <div class="stat-value">{{ active }}</div>
+    <div class="stat-sub">on track</div>
+    <div class="stat-icon">✅</div>
+  </div>
+  <div class="stat-card amber">
+    <div class="stat-label">At Risk</div>
+    <div class="stat-value">{{ at_risk }}</div>
+    <div class="stat-sub">need attention</div>
+    <div class="stat-icon">⚠️</div>
+  </div>
+  <div class="stat-card red">
+    <div class="stat-label">Completed</div>
+    <div class="stat-value">{{ completed }}</div>
+    <div class="stat-sub">harvested</div>
+    <div class="stat-icon">🏆</div>
+  </div>
+</div>
+
+<div style="display:grid; grid-template-columns: 1fr 340px; gap:20px; align-items:start;">
+
+  <!-- Recent Fields -->
+  <div class="card fade-in fade-in-2">
+    <div class="card-header">
+      <div class="card-title">🌾 Recently Updated Fields</div>
+      <a href="{% url 'fields:list' %}" class="btn btn-outline btn-sm">View All</a>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th>Crop</th>
+            <th>Stage</th>
+            <th>Status</th>
+            <th>Agent</th>
+            <th>Updated</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for field in recent_fields %}
+          <tr>
+            <td>
+              <a href="{% url 'fields:detail' field.pk %}" style="font-weight:600; color:var(--green-700); text-decoration:none;">
+                {{ field.name }}
+              </a>
+            </td>
+            <td class="font-mono text-small">{{ field.crop_type }}</td>
+            <td>
+              <span class="stage-badge stage-{{ field.current_stage|lower }}">
+                {{ field.get_current_stage_display }}
+              </span>
+            </td>
+            <td>
+              <span class="badge {{ field.status_badge_class }}">
+                {{ field.computed_status|title }}
+              </span>
+            </td>
+            <td class="text-small">
+              {% if field.assigned_agent %}
+                {{ field.assigned_agent.get_full_name|default:field.assigned_agent.username }}
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+            <td class="font-mono text-small text-muted">{{ field.updated_at|date:"M d" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="text-muted" style="text-align:center; padding:32px;">No fields yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Sidebar panels -->
+  <div style="display:flex; flex-direction:column; gap:16px;">
+
+    <!-- Agent breakdown -->
+    <div class="card fade-in fade-in-3">
+      <div class="card-header">
+        <div class="card-title">👤 Agents Overview</div>
+      </div>
+      <div class="card-body" style="padding:0;">
+        {% for row in agent_data %}
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--slate-100);">
+          <div>
+            <div style="font-weight:600; font-size:14px;">{{ row.agent.get_full_name|default:row.agent.username }}</div>
+            <div class="font-mono text-small text-muted">{{ row.total }} field{{ row.total|pluralize }}</div>
+          </div>
+          <div style="display:flex; gap:6px;">
+            {% if row.at_risk %}<span class="badge badge-at-risk">{{ row.at_risk }} risk</span>{% endif %}
+            {% if row.completed %}<span class="badge badge-completed">{{ row.completed }} done</span>{% endif %}
+            {% if not row.at_risk and not row.completed %}<span class="badge badge-active">All active</span>{% endif %}
+          </div>
+        </div>
+        {% empty %}
+        <div style="padding:24px; text-align:center; color:var(--text-muted); font-size:13px;">No agents assigned yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="card fade-in fade-in-4">
+      <div class="card-header">
+        <div class="card-title">📝 Recent Activity</div>
+      </div>
+      <div class="card-body" style="padding:16px 18px;">
+        {% for update in recent_updates %}
+        <div style="padding-bottom:14px; margin-bottom:14px; border-bottom:1px solid var(--slate-100);">
+          <div style="font-size:12px; color:var(--text-muted); font-family:var(--font-mono); margin-bottom:3px;">
+            {{ update.created_at|date:"M d, H:i" }}
+          </div>
+          <div style="font-size:13px; font-weight:600;">
+            <a href="{% url 'fields:detail' update.field.pk %}" style="color:var(--green-700); text-decoration:none;">{{ update.field.name }}</a>
+          </div>
+          <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">
+            {{ update.previous_stage }} → <strong>{{ update.new_stage }}</strong>
+            by {{ update.updated_by.get_full_name|default:update.updated_by.username|default:"Unknown" }}
+          </div>
+        </div>
+        {% empty %}
+        <div style="text-align:center; color:var(--text-muted); font-size:13px; padding:12px 0;">No recent activity.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

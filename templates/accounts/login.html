@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Sign In{% endblock %}
+
+{% block auth_content %}
+<div class="auth-page">
+  <div class="auth-visual">
+    <div class="auth-visual-content">
+      <div class="auth-big-icon">🌾</div>
+      <div class="auth-tagline">Grow smarter.<br>Track every field.</div>
+      <p class="auth-sub">SmartSeason gives coordinators and field agents real-time visibility into crop progress across every plot in the season.</p>
+      <div style="margin-top:40px; display:flex; gap:16px; justify-content:center; flex-wrap:wrap;">
+        <div style="background:rgba(255,255,255,.07); border-radius:10px; padding:14px 20px; text-align:left; min-width:130px;">
+          <div style="font-size:22px; font-weight:800; color:#fff; font-family:var(--font-display)">4 Stages</div>
+          <div style="font-size:11px; color:var(--green-300); font-family:var(--font-mono)">Lifecycle tracking</div>
+        </div>
+        <div style="background:rgba(255,255,255,.07); border-radius:10px; padding:14px 20px; text-align:left; min-width:130px;">
+          <div style="font-size:22px; font-weight:800; color:#fff; font-family:var(--font-display)">Live Status</div>
+          <div style="font-size:11px; color:var(--green-300); font-family:var(--font-mono)">Auto-computed risk</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-form-panel">
+    <div class="auth-form-inner">
+      <div style="margin-bottom:32px;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+          <div style="width:36px;height:36px;background:var(--green-600);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;">🌱</div>
+          <span style="font-family:var(--font-display);font-weight:700;font-size:16px;color:var(--green-700)">SmartSeason</span>
+        </div>
+        <div class="auth-title">Welcome back</div>
+        <div class="auth-subtitle">Sign in to your monitoring dashboard</div>
+      </div>
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-error">
+          <span>❌</span> {{ form.non_field_errors|join:", " }}
+        </div>
+      {% endif %}
+
+      <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          {{ form.username }}
+          {% if form.username.errors %}<div class="invalid-feedback">{{ form.username.errors|join:", " }}</div>{% endif %}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          {{ form.password }}
+          {% if form.password.errors %}<div class="invalid-feedback">{{ form.password.errors|join:", " }}</div>{% endif %}
+        </div>
+        <button type="submit" class="btn btn-primary w-full" style="justify-content:center; margin-top:8px; padding:12px;">
+          Sign In →
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

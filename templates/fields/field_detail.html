@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block title %}{{ field.name }}{% endblock %}
+{% block page_title %}{{ field.name }}{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{% url 'fields:list' %}" class="btn btn-outline btn-sm">← Back</a>
+  {% if user.is_admin_role %}
+    <a href="{% url 'fields:edit' field.pk %}" class="btn btn-outline btn-sm">✏️ Edit</a>
+  {% endif %}
+  <a href="{% url 'fields:update' field.pk %}" class="btn btn-primary btn-sm">📝 Log Update</a>
+{% endblock %}
+
+{% block content %}
+<div style="display:grid; grid-template-columns: 1fr 340px; gap:20px; align-items:start;">
+
+  <!-- Left: Field info + timeline -->
+  <div style="display:flex; flex-direction:column; gap:16px;">
+
+    <!-- Hero card -->
+    <div class="card fade-in fade-in-1">
+      <div class="field-card-accent {{ field.computed_status|lower }}" style="height:6px;"></div>
+      <div class="card-body">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+          <div>
+            <div style="font-family:var(--font-display); font-size:26px; font-weight:800;">{{ field.name }}</div>
+            <div style="color:var(--text-muted); font-size:15px; margin-top:4px;">🌱 {{ field.crop_type }}</div>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+            <span class="badge {{ field.status_badge_class }}" style="font-size:13px; padding:5px 14px;">
+              {{ field.computed_status|title }}
+            </span>
+            <span class="stage-badge stage-{{ field.current_stage|lower }}" style="font-size:13px;">
+              {{ field.get_current_stage_display }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Stage Progress Bar -->
+        <div style="margin-top:24px;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+            {% for stage_key, stage_label in field.Stage.choices %}
+            <span style="font-size:11px; font-family:var(--font-mono); color:{% if field.current_stage == stage_key %}var(--green-700){% else %}var(--text-muted){% endif %}; font-weight:{% if field.current_stage == stage_key %}700{% else %}400{% endif %};">
+              {{ stage_label }}
+            </span>
+            {% endfor %}
+          </div>
+          <div class="progress-track" style="height:10px;">
+            <div class="progress-bar {{ field.current_stage|lower }}" style="border-radius:5px;"></div>
+          </div>
+          <div style="text-align:right; font-size:11px; font-family:var(--font-mono); color:var(--text-muted); margin-top:4px;">{{ field.stage_progress }}% through lifecycle</div>
+        </div>
+
+        <!-- Meta grid -->
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">
+          <div>
+            <div class="stat-label">Planting Date</div>
+            <div style="font-weight:600; font-size:15px;">{{ field.planting_date|date:"M d, Y" }}</div>
+          </div>
+          <div>
+            <div class="stat-label">Days In Ground</div>
+            <div style="font-weight:600; font-size:15px;">{{ field.days_since_planted }} days</div>
+          </div>
+          <div>
+            <div class="stat-label">Last Updated</div>
+            <div style="font-weight:600; font-size:15px;">{{ field.updated_at|date:"M d, Y" }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Update History Timeline -->
+    <div class="card fade-in fade-in-2">
+      <div class="card-header">
+        <div class="card-title">📋 Update History</div>
+        <span class="font-mono text-small text-muted">{{ updates|length }} record{{ updates|length|pluralize }}</span>
+      </div>
+      <div class="card-body">
+        {% if updates %}
+        <div class="timeline">
+          {% for update in updates %}
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-date">
+              {{ update.created_at|date:"M d, Y — H:i" }}
+              &nbsp;·&nbsp; by {{ update.updated_by.get_full_name|default:update.updated_by.username|default:"Unknown" }}
+            </div>
+            <div class="timeline-content">
+              <div class="timeline-stage">
+                <span class="stage-badge stage-{{ update.previous_stage|lower }}" style="font-size:11px;">{{ update.previous_stage }}</span>
+                <span style="color:var(--text-muted);">→</span>
+                <span class="stage-badge stage-{{ update.new_stage|lower }}" style="font-size:11px;">{{ update.new_stage }}</span>
+              </div>
+              {% if update.notes %}
+              <div class="timeline-notes">{{ update.notes }}</div>
+              {% else %}
+              <div class="timeline-notes text-muted"><em>No notes added.</em></div>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state" style="padding:32px 0;">
+          <div class="empty-state-icon">📋</div>
+          <div class="empty-state-text">No updates logged yet for this field.</div>
+          <a href="{% url 'fields:update' field.pk %}" class="btn btn-primary btn-sm" style="margin-top:12px;">Log First Update</a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Right sidebar -->
+  <div style="display:flex; flex-direction:column; gap:16px;">
+
+    <!-- Agent info -->
+    <div class="card fade-in fade-in-3">
+      <div class="card-header">
+        <div class="card-title">👤 Assigned Agent</div>
+        {% if user.is_admin_role %}
+        <a href="{% url 'fields:edit' field.pk %}" class="btn btn-outline btn-sm">Reassign</a>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        {% if field.assigned_agent %}
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:48px;height:48px;background:var(--green-100);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--green-700);font-family:var(--font-display);">
+            {{ field.assigned_agent.first_name|first|default:field.assigned_agent.username|first|upper }}
+          </div>
+          <div>
+            <div style="font-weight:700; font-size:15px;">{{ field.assigned_agent.get_full_name|default:field.assigned_agent.username }}</div>
+            <div class="font-mono text-small text-muted">{{ field.assigned_agent.email }}</div>
+            <div class="font-mono text-small" style="color:var(--green-600); margin-top:2px;">Field Agent</div>
+          </div>
+        </div>
+        {% else %}
+        <div style="text-align:center; color:var(--text-muted); padding:16px 0; font-size:14px;">
+          No agent assigned.<br>
+          {% if user.is_admin_role %}<a href="{% url 'fields:edit' field.pk %}" style="color:var(--green-600);">Assign one now →</a>{% endif %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Quick Update -->
+    <div class="card fade-in fade-in-4">
+      <div class="card-header">
+        <div class="card-title">⚡ Quick Log Update</div>
+      </div>
+      <div class="card-body">
+        <form method="post" action="{% url 'fields:update' field.pk %}">
+          {% csrf_token %}
+          <div class="form-group">
+            <label class="form-label">New Stage</label>
+            {{ update_form.new_stage }}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Notes</label>
+            {{ update_form.notes }}
+          </div>
+          <button type="submit" class="btn btn-primary w-full" style="justify-content:center;">
+            Save Update
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Field metadata -->
+    <div class="card fade-in fade-in-5">
+      <div class="card-header">
+        <div class="card-title">ℹ️ Field Info</div>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table class="data-table">
+          <tbody>
+            <tr><td class="text-muted font-mono text-small">Created</td><td class="text-small">{{ field.created_at|date:"M d, Y" }}</td></tr>
+            <tr><td class="text-muted font-mono text-small">Total Updates</td><td class="text-small font-mono">{{ updates|length }}</td></tr>
+            <tr><td class="text-muted font-mono text-small">Stage Progress</td><td class="text-small font-mono">{{ field.stage_progress }}%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

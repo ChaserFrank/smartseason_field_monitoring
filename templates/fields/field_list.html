@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Fields{% endblock %}
+{% block page_title %}Fields{% endblock %}
+
+{% block topbar_actions %}
+  {% if user.is_admin_role %}
+  <a href="{% url 'fields:create' %}" class="btn btn-primary btn-sm">➕ Add Field</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<!-- Search & Filters -->
+<div class="card mb-6 fade-in fade-in-1">
+  <div class="card-body" style="padding:16px 20px;">
+    <form method="get" style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+      <div style="flex:2; min-width:200px;">
+        <label class="form-label">Search</label>
+        {{ search_form.query }}
+      </div>
+      <div style="flex:1; min-width:150px;">
+        <label class="form-label">Stage</label>
+        {{ search_form.stage }}
+      </div>
+      <div style="flex:1; min-width:150px;">
+        <label class="form-label">Status</label>
+        {{ search_form.status }}
+      </div>
+      <div>
+        <button type="submit" class="btn btn-primary" style="margin-top:0;">Search</button>
+        <a href="{% url 'fields:list' %}" class="btn btn-outline" style="margin-left:6px;">Clear</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Results count -->
+{% if request.GET %}
+<div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;" class="fade-in fade-in-1">
+  Showing {{ page_obj.paginator.count|default:fields|length }} field{{ page_obj.paginator.count|default:fields|length|pluralize }}
+  {% if request.GET.query %} matching "<strong>{{ request.GET.query }}</strong>"{% endif %}
+</div>
+{% endif %}
+
+<!-- Field Grid -->
+{% if fields %}
+<div class="field-grid fade-in fade-in-2">
+  {% for field in fields %}
+  <a href="{% url 'fields:detail' field.pk %}" class="field-card">
+    <div class="field-card-accent {{ field.computed_status|lower }}"></div>
+    <div class="field-card-body">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+        <div class="field-name">{{ field.name }}</div>
+        <span class="badge {{ field.status_badge_class }}">{{ field.computed_status|title }}</span>
+      </div>
+      <div class="field-crop">🌱 {{ field.crop_type }}</div>
+
+      <div style="margin: 12px 0;">
+        <span class="stage-badge stage-{{ field.current_stage|lower }}">
+          {{ field.get_current_stage_display }}
+        </span>
+      </div>
+
+      <div class="progress-track">
+        <div class="progress-bar {{ field.current_stage|lower }}"></div>
+      </div>
+
+      <div class="field-meta">
+        <span class="field-meta-item">
+          📅 Planted {{ field.planting_date|date:"M d, Y" }}
+        </span>
+        <span class="field-meta-item">{{ field.days_since_planted }}d ago</span>
+      </div>
+
+      {% if field.assigned_agent %}
+      <div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--slate-100); font-size:12px; color:var(--text-muted);">
+        👤 {{ field.assigned_agent.get_full_name|default:field.assigned_agent.username }}
+      </div>
+      {% else %}
+      <div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--slate-100); font-size:12px; color:var(--text-muted);">
+        👤 <em>Unassigned</em>
+      </div>
+      {% endif %}
+    </div>
+  </a>
+  {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav class="pagination">
+  {% if page_obj.has_previous %}
+    <div class="page-item">
+      <a class="page-link" href="?{% if request.GET.query %}query={{ request.GET.query }}&{% endif %}page={{ page_obj.previous_page_number }}">&laquo;</a>
+    </div>
+  {% endif %}
+  {% for num in page_obj.paginator.page_range %}
+    {% if page_obj.number == num %}
+      <div class="page-item active"><span class="page-link">{{ num }}</span></div>
+    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+      <div class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></div>
+    {% endif %}
+  {% endfor %}
+  {% if page_obj.has_next %}
+    <div class="page-item">
+      <a class="page-link" href="?{% if request.GET.query %}query={{ request.GET.query }}&{% endif %}page={{ page_obj.next_page_number }}">&raquo;</a>
+    </div>
+  {% endif %}
+</nav>
+{% endif %}
+
+{% else %}
+<div class="empty-state fade-in">
+  <div class="empty-state-icon">🔍</div>
+  <div class="empty-state-text">No fields found matching your search.</div>
+  {% if user.is_admin_role %}
+  <a href="{% url 'fields:create' %}" class="btn btn-primary" style="margin-top:16px;">Create First Field</a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}
