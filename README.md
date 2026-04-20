@@ -1,4 +1,4 @@
-# 🌾 SmartSeason Field Monitoring System
+# SmartSeason Field Monitoring System
 
 A production-quality Django application for tracking crop progress across multiple fields during a growing season. Designed for both field agents and coordinators, it features role-based access, computed lifecycle statuses, detailed update histories, and comprehensive dashboards.
 
