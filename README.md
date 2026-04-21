@@ -295,7 +295,6 @@ python manage.py runserver
 | Field Agent | `agent_james` | `agent1234` |
 | Field Agent | `agent_wanjiru` | `agent1234` |
 
-Credentials are also shown on the login page.
 
 ---
 
